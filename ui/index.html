@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MNIST Digit Classifier</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔢 MNIST Digit Classifier</h1>
+            <p class="subtitle">Upload handwritten digits for instant classification</p>
+        </header>
+
+        <!-- Health Status -->
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-label">Status:</span>
+                <span id="health-status" class="status-value">Checking...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Uptime:</span>
+                <span id="uptime" class="status-value">--</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Model:</span>
+                <span id="model-status" class="status-value">--</span>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid">
+            <!-- Prediction Card -->
+            <div class="card">
+                <h2>📸 Predict Digit</h2>
+                <div class="upload-area" id="predict-upload-area">
+                    <input type="file" id="predict-file" accept="image/*" hidden>
+                    <div class="upload-placeholder">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <p>Click or drag image here</p>
+                        <span class="file-hint">PNG, JPG up to 5MB</span>
+                    </div>
+                    <div class="preview-container" id="predict-preview" style="display: none;">
+                        <img id="predict-image" alt="Preview">
+                        <button class="remove-btn" id="remove-predict">×</button>
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="predict-btn" disabled>Predict</button>
+                
+                <div id="prediction-result" class="result-box" style="display: none;">
+                    <h3>Prediction Result</h3>
+                    <div class="prediction-display">
+                        <div class="predicted-digit" id="predicted-digit">-</div>
+                        <div class="confidence" id="confidence">Confidence: -</div>
+                    </div>
+                    <div class="probabilities" id="probabilities"></div>
+                </div>
+            </div>
+
+            <!-- Retraining Card -->
+            <div class="card">
+                <h2>🔄 Retrain Model</h2>
+                <div class="upload-area" id="retrain-upload-area">
+                    <input type="file" id="retrain-files" accept="image/*" multiple hidden>
+                    <div class="upload-placeholder">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <p>Upload multiple training images</p>
+                        <span class="file-hint">Select multiple images</span>
+                    </div>
+                </div>
+                
+                <div id="file-list" class="file-list"></div>
+                
+                <div class="form-group">
+                    <label for="labels-input">Labels (comma-separated):</label>
+                    <input type="text" id="labels-input" placeholder="e.g., 0,1,2,3,4" class="input-field">
+                    <span class="input-hint">Enter labels matching the order of uploaded images</span>
+                </div>
+                
+                <button class="btn btn-secondary" id="upload-btn" disabled>Upload Images</button>
+                <button class="btn btn-primary" id="retrain-btn">Retrain Model</button>
+                
+                <div id="retrain-result" class="result-box" style="display: none;">
+                    <h3>Retraining Complete</h3>
+                    <div id="retrain-info"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visualizations Section -->
+        <div class="visualizations">
+            <h2>📊 Model Insights</h2>
+            <div class="viz-grid">
+                <div class="viz-card">
+                    <h3>Training Data Distribution</h3>
+                    <div id="data-distribution" class="chart-container">
+                        <canvas id="distribution-chart"></canvas>
+                    </div>
+                </div>
+                <div class="viz-card">
+                    <h3>Recent Predictions</h3>
+                    <div id="recent-predictions" class="predictions-list">
+                        <p class="empty-state">No predictions yet</p>
+                    </div>
+                </div>
+                <div class="viz-card">
+                    <h3>Model Performance</h3>
+                    <div id="model-metrics" class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">Accuracy</span>
+                            <span class="metric-value">98.5%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Precision</span>
+                            <span class="metric-value">98.6%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Recall</span>
+                            <span class="metric-value">98.5%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">F1 Score</span>
+                            <span class="metric-value">98.5%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>MLOps Image Classification Pipeline | Built with TensorFlow & FastAPI</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
