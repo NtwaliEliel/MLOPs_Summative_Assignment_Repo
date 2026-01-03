@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
 COPY api/requirements.txt /app/api/requirements.txt
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r /app/api/requirements.txt
+RUN pip3 install --no-cache-dir -r /app/api/requirements.txt
 
 # Copy application code
 COPY . /app/
