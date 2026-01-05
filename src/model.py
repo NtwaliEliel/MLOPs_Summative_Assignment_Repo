@@ -145,7 +145,7 @@ def load_model(model_path):
     Returns:
         Loaded Keras model
     """
-    return keras.models.load_model(model_path)
+    return keras.models.load_model(model_path, compile=False)
 
 
 def save_model(model, model_path):
