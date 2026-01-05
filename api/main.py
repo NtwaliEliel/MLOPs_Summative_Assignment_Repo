@@ -40,6 +40,7 @@ MODEL_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'models', 
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'train')
 predictor = None
 start_time = time.time()
+load_error = None
 
 # Ensure directories exist
 os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
@@ -51,11 +52,12 @@ async def startup_event():
     """
     Initialize model on startup
     """
-    global predictor
+    global predictor, load_error
     try:
         predictor = ModelPredictor(MODEL_PATH)
         print("Model loaded successfully on startup")
     except Exception as e:
+        load_error = str(e)
         print(f"Warning: Could not load model on startup: {e}")
         print("Model will need to be trained first")
 
@@ -82,12 +84,23 @@ async def health_check():
     """
     Health check endpoint with uptime
     """
+    global predictor, load_error
     uptime = time.time() - start_time
+    
+    # Try to load model if it's not loaded yet (lazy initialization)
+    if predictor is None:
+        try:
+            if os.path.exists(MODEL_PATH):
+                predictor = ModelPredictor(MODEL_PATH)
+                load_error = None
+        except Exception as e:
+            load_error = str(e)
     
     return {
         "status": "healthy",
         "uptime_seconds": round(uptime, 2),
-        "model_loaded": predictor is not None and predictor.model is not None
+        "model_loaded": predictor is not None and predictor.model is not None,
+        "load_error": load_error
     }
 
 
@@ -102,6 +115,20 @@ async def predict(file: UploadFile = File(...)):
     Returns:
         Prediction result with confidence and probabilities
     """
+    global predictor, load_error
+    
+    # Lazy load if needed
+    if predictor is None:
+        try:
+            if os.path.exists(MODEL_PATH):
+                predictor = ModelPredictor(MODEL_PATH)
+                load_error = None
+            else:
+                raise HTTPException(status_code=503, detail="Model file not found. Please train the model first.")
+        except Exception as e:
+            load_error = str(e)
+            raise HTTPException(status_code=503, detail=f"Model not loaded: {str(e)}")
+
     if predictor is None or predictor.model is None:
         raise HTTPException(status_code=503, detail="Model not loaded. Please train the model first.")
     
@@ -271,7 +298,8 @@ async def debug_info():
             "model_dir_contents": os.listdir(model_dir) if os.path.exists(model_dir) else [],
             "working_directory": os.getcwd(),
             "predictor_loaded": predictor is not None,
-            "predictor_model_loaded": predictor is not None and predictor.model is not None
+            "predictor_model_loaded": predictor is not None and predictor.model is not None,
+            "load_error": load_error
         }
     
     except Exception as e:
