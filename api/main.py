@@ -255,6 +255,33 @@ async def get_stats():
         raise HTTPException(status_code=500, detail=f"Stats error: {str(e)}")
 
 
+@app.get("/debug")
+async def debug_info():
+    """
+    Debug endpoint to check file system and model status
+    """
+    try:
+        model_dir = os.path.dirname(MODEL_PATH)
+        
+        return {
+            "model_path": MODEL_PATH,
+            "model_exists": os.path.exists(MODEL_PATH),
+            "model_size_bytes": os.path.getsize(MODEL_PATH) if os.path.exists(MODEL_PATH) else 0,
+            "model_dir_exists": os.path.exists(model_dir),
+            "model_dir_contents": os.listdir(model_dir) if os.path.exists(model_dir) else [],
+            "working_directory": os.getcwd(),
+            "predictor_loaded": predictor is not None,
+            "predictor_model_loaded": predictor is not None and predictor.model is not None
+        }
+    
+    except Exception as e:
+        return {
+            "error": str(e),
+            "model_path": MODEL_PATH,
+            "working_directory": os.getcwd()
+        }
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
