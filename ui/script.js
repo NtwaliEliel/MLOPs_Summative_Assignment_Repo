@@ -1,5 +1,5 @@
 // API base URL - change this to your deployed API URL
-const API_URL = 'http://localhost:8000';
+const API_URL = 'https://mnist-mlops-api-production.up.railway.app';
 
 // Recent predictions storage
 let recentPredictions = [];

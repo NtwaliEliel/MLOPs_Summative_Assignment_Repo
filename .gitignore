@@ -71,7 +71,7 @@ venv.bak/
 Thumbs.db
 
 # Project specific
-*.h5
+# *.h5  # Commented out to include trained model in deployment
 *.hdf5
 data/train/*
 data/test/*
