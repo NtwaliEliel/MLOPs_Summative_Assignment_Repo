@@ -11,18 +11,11 @@ import time
 import shutil
 from typing import List
 import numpy as np
-import tensorflow as tf
-
-# Ensure eager execution is enabled
-if not tf.executing_eagerly():
-    tf.compat.v1.enable_eager_execution()
-tf.config.run_functions_eagerly(True)
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.prediction import ModelPredictor
-from src.model import load_model, retrain_model
+# Import local modules lazily or lightweight ones here
 from src.preprocessing import load_and_preprocess_image
 
 # Initialize FastAPI app
@@ -52,20 +45,30 @@ load_error = None
 os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
 os.makedirs(DATA_DIR, exist_ok=True)
 
-
-@app.on_event("startup")
-async def startup_event():
+def get_predictor():
     """
-    Initialize model on startup
+    Lazy initializer for ModelPredictor
     """
     global predictor, load_error
-    try:
-        predictor = ModelPredictor(MODEL_PATH)
-        print("Model loaded successfully on startup")
-    except Exception as e:
-        load_error = str(e)
-        print(f"Warning: Could not load model on startup: {e}")
-        print("Model will need to be trained first")
+    if predictor is None:
+        try:
+            # Import heavy modules only when needed
+            import tensorflow as tf
+            if not tf.executing_eagerly():
+                tf.compat.v1.enable_eager_execution()
+            tf.config.run_functions_eagerly(True)
+            
+            from src.prediction import ModelPredictor
+            
+            if os.path.exists(MODEL_PATH):
+                predictor = ModelPredictor(MODEL_PATH)
+                load_error = None
+            else:
+                load_error = "Model file not found"
+        except Exception as e:
+            load_error = str(e)
+            print(f"Error loading model: {e}")
+    return predictor
 
 
 @app.get("/")
@@ -88,25 +91,15 @@ async def root():
 @app.get("/health")
 async def health_check():
     """
-    Health check endpoint with uptime
+    Lightweight health check endpoint
     """
-    global predictor, load_error
     uptime = time.time() - start_time
-    
-    # Try to load model if it's not loaded yet (lazy initialization)
-    if predictor is None:
-        try:
-            if os.path.exists(MODEL_PATH):
-                predictor = ModelPredictor(MODEL_PATH)
-                load_error = None
-        except Exception as e:
-            load_error = str(e)
     
     return {
         "status": "healthy",
         "uptime_seconds": round(uptime, 2),
-        "model_loaded": predictor is not None and predictor.model is not None,
-        "load_error": load_error
+        "model_available": os.path.exists(MODEL_PATH),
+        "model_loaded": predictor is not None and predictor.model is not None
     }
 
 
@@ -114,29 +107,11 @@ async def health_check():
 async def predict(file: UploadFile = File(...)):
     """
     Predict digit from uploaded image
-    
-    Args:
-        file: Uploaded image file
-    
-    Returns:
-        Prediction result with confidence and probabilities
     """
-    global predictor, load_error
+    current_predictor = get_predictor()
     
-    # Lazy load if needed
-    if predictor is None:
-        try:
-            if os.path.exists(MODEL_PATH):
-                predictor = ModelPredictor(MODEL_PATH)
-                load_error = None
-            else:
-                raise HTTPException(status_code=503, detail="Model file not found. Please train the model first.")
-        except Exception as e:
-            load_error = str(e)
-            raise HTTPException(status_code=503, detail=f"Model not loaded: {str(e)}")
-
-    if predictor is None or predictor.model is None:
-        raise HTTPException(status_code=503, detail="Model not loaded. Please train the model first.")
+    if current_predictor is None or current_predictor.model is None:
+        raise HTTPException(status_code=503, detail=f"Model not loaded: {load_error or 'Unknown error'}")
     
     try:
         # Read image bytes
@@ -241,31 +216,32 @@ async def retrain():
         if len(images) == 0:
             raise HTTPException(status_code=400, detail="No training images found. Please upload images first.")
         
-        # Convert to numpy arrays
-        x_train = np.array(images)
-        y_train = np.array(labels)
+        # Lazy load predictor to get model
+        current_predictor = get_predictor()
         
         # Load existing model or create new one
-        if predictor is None or predictor.model is None:
-            # Try to load from file first if predictor failed to init
+        if current_predictor is None or current_predictor.model is None:
+            # Import heavy training modules
+            from src.model import create_cnn_model, load_model
+            
+            # Try to load from file first
             try:
                 if os.path.exists(MODEL_PATH):
-                    from src.model import load_model
                     model = load_model(MODEL_PATH)
                 else:
-                    from src.model import create_cnn_model
                     model = create_cnn_model()
             except:
-                from src.model import create_cnn_model
                 model = create_cnn_model()
         else:
-            model = predictor.model
+            model = current_predictor.model
         
         # Retrain model
+        from src.model import retrain_model
         history = retrain_model(model, x_train, y_train, epochs=5, model_path=MODEL_PATH)
         
         # Reload model in predictor
         try:
+            from src.prediction import ModelPredictor
             predictor = ModelPredictor(MODEL_PATH)
         except Exception as e:
             print(f"Error reloading predictor: {e}")

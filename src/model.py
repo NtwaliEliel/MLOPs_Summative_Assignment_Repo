@@ -26,6 +26,10 @@ def create_cnn_model(input_shape=(28, 28, 1), num_classes=10):
     Returns:
         Compiled Keras model
     """
+    _ensure_eager()
+    from tensorflow import keras
+    from tensorflow.keras import layers
+    
     model = keras.Sequential([
         # First convolutional block
         layers.Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=input_shape),
@@ -76,6 +80,9 @@ def train_model(model, x_train, y_train, x_val, y_val, epochs=20, batch_size=128
     Returns:
         Training history
     """
+    _ensure_eager()
+    from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+    
     # Define callbacks
     early_stopping = EarlyStopping(
         monitor='val_loss',
@@ -150,6 +157,8 @@ def load_model(model_path):
     Returns:
         Loaded Keras model
     """
+    _ensure_eager()
+    from tensorflow import keras
     return keras.models.load_model(model_path, compile=False)
 
 

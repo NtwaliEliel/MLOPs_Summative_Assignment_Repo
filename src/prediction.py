@@ -3,7 +3,7 @@ Prediction utilities for trained model
 """
 
 import numpy as np
-from tensorflow import keras
+# from tensorflow import keras  <-- Moving this inside functions
 from src.preprocessing import load_and_preprocess_image
 
 
@@ -28,6 +28,7 @@ class ModelPredictor:
         Load the trained model
         """
         try:
+            from tensorflow import keras
             self.model = keras.models.load_model(self.model_path)
             print(f"Model loaded successfully from {self.model_path}")
         except Exception as e:
