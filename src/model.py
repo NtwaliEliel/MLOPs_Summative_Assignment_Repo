@@ -182,7 +182,7 @@ def get_model_summary(model):
     return summary_buffer.getvalue()
 
 
-def retrain_model(model, new_x_train, new_y_train, epochs=10, batch_size=128, model_path='models/cnn_model.h5'):
+def retrain_model(model, new_x_train, new_y_train, epochs=10, batch_size=32, model_path='models/cnn_model.h5'):
     """
     Retrain existing model with new data
     
@@ -197,12 +197,23 @@ def retrain_model(model, new_x_train, new_y_train, epochs=10, batch_size=128, mo
     Returns:
         Training history
     """
+    # Ensure model is compiled
+    if not model.optimizer:
+        model.compile(
+            optimizer='adam',
+            loss='sparse_categorical_crossentropy',
+            metrics=['accuracy']
+        )
+
+    # Adjust validation split if dataset is very small
+    val_split = 0.2 if len(new_x_train) > 5 else 0.0
+    
     # Train on new data
     history = model.fit(
         new_x_train, new_y_train,
-        batch_size=batch_size,
+        batch_size=min(batch_size, len(new_x_train)),
         epochs=epochs,
-        validation_split=0.2,
+        validation_split=val_split,
         verbose=1
     )
     

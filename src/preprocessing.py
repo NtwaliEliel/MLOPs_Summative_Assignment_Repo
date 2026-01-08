@@ -7,16 +7,17 @@ from PIL import Image
 import io
 
 
-def load_and_preprocess_image(image_bytes, target_size=(28, 28)):
+def load_and_preprocess_image(image_bytes, target_size=(28, 28), add_batch_dim=True):
     """
     Load and preprocess an image from bytes
     
     Args:
         image_bytes: Image data in bytes
         target_size: Target size for resizing (height, width)
+        add_batch_dim: Whether to add batch dimension (1, H, W, 1)
     
     Returns:
-        Preprocessed image array ready for model prediction
+        Preprocessed image array
     """
     # Open image from bytes
     image = Image.open(io.BytesIO(image_bytes))
@@ -33,8 +34,12 @@ def load_and_preprocess_image(image_bytes, target_size=(28, 28)):
     # Normalize pixel values to [0, 1]
     img_array = img_array.astype('float32') / 255.0
     
-    # Reshape for model input (add batch and channel dimensions)
-    img_array = img_array.reshape(1, target_size[0], target_size[1], 1)
+    # Reshape for model input (add channel dimension)
+    img_array = img_array.reshape(target_size[0], target_size[1], 1)
+    
+    if add_batch_dim:
+        # Add batch dimension
+        img_array = np.expand_dims(img_array, axis=0)
     
     return img_array
 

@@ -198,32 +198,42 @@ async def retrain():
     global predictor
     
     try:
-        # Check if there are uploaded images
-        if not os.path.exists(DATA_DIR) or not os.listdir(DATA_DIR):
-            raise HTTPException(status_code=400, detail="No training data available. Please upload images first.")
+        # Check if DATA_DIR exists
+        if not os.path.exists(DATA_DIR):
+            raise HTTPException(status_code=400, detail="Training directory not found. Please upload images first.")
         
         # Load uploaded images
         images = []
         labels = []
         
+        # Walk through label directories
         for label_dir in os.listdir(DATA_DIR):
             label_path = os.path.join(DATA_DIR, label_dir)
-            if os.path.isdir(label_path):
+            
+            # Ensure it's a directory and named as an integer (0-9)
+            if os.path.isdir(label_path) and label_dir.isdigit():
                 label = int(label_dir)
                 
                 for img_file in os.listdir(label_path):
+                    if img_file.startswith('.'): # Skip .DS_Store etc.
+                        continue
+                        
                     img_path = os.path.join(label_path, img_file)
                     if os.path.isfile(img_path):
-                        with open(img_path, 'rb') as f:
-                            img_bytes = f.read()
-                        
-                        # Preprocess image
-                        processed_img = load_and_preprocess_image(img_bytes)
-                        images.append(processed_img[0])
-                        labels.append(label)
+                        try:
+                            with open(img_path, 'rb') as f:
+                                img_bytes = f.read()
+                            
+                            # Preprocess image without batch dimension (we'll stack them later)
+                            processed_img = load_and_preprocess_image(img_bytes, add_batch_dim=False)
+                            images.append(processed_img)
+                            labels.append(label)
+                        except Exception as e:
+                            print(f"Warning: Could not process {img_path}: {e}")
+                            continue
         
         if len(images) == 0:
-            raise HTTPException(status_code=400, detail="No valid images found for training")
+            raise HTTPException(status_code=400, detail="No training images found. Please upload images first.")
         
         # Convert to numpy arrays
         x_train = np.array(images)
@@ -231,16 +241,28 @@ async def retrain():
         
         # Load existing model or create new one
         if predictor is None or predictor.model is None:
-            from src.model import create_cnn_model
-            model = create_cnn_model()
+            # Try to load from file first if predictor failed to init
+            try:
+                if os.path.exists(MODEL_PATH):
+                    from src.model import load_model
+                    model = load_model(MODEL_PATH)
+                else:
+                    from src.model import create_cnn_model
+                    model = create_cnn_model()
+            except:
+                from src.model import create_cnn_model
+                model = create_cnn_model()
         else:
             model = predictor.model
         
         # Retrain model
-        history = retrain_model(model, x_train, y_train, epochs=10, model_path=MODEL_PATH)
+        history = retrain_model(model, x_train, y_train, epochs=5, model_path=MODEL_PATH)
         
         # Reload model in predictor
-        predictor = ModelPredictor(MODEL_PATH)
+        try:
+            predictor = ModelPredictor(MODEL_PATH)
+        except Exception as e:
+            print(f"Error reloading predictor: {e}")
         
         # Get final accuracy
         final_accuracy = history.history['accuracy'][-1]
@@ -252,7 +274,11 @@ async def retrain():
             "training_samples": len(images)
         }
     
+    except HTTPException:
+        raise
     except Exception as e:
+        import traceback
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Retraining error: {str(e)}")
 
 

@@ -186,11 +186,14 @@ async function handleUpload() {
             body: formData
         });
 
+        const result = await response.json();
+        console.log("Upload result:", result);
+
         if (!response.ok) {
-            throw new Error('Upload failed');
+            console.error("Upload error details:", result);
+            throw new Error(result.detail || 'Upload failed');
         }
 
-        const result = await response.json();
         showNotification(result.message, 'success');
 
         // Clear inputs
@@ -215,11 +218,14 @@ async function handleRetrain() {
             method: 'POST'
         });
 
+        const result = await response.json();
+        console.log("Retrain result:", result);
+
         if (!response.ok) {
-            throw new Error('Retraining failed');
+            console.error("Retrain error details:", result);
+            throw new Error(result.detail || 'Retraining failed');
         }
 
-        const result = await response.json();
         displayRetrainResult(result);
         showNotification('Model retrained successfully!', 'success');
     } catch (error) {
