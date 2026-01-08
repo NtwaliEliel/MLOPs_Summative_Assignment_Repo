@@ -9,6 +9,11 @@ from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 import numpy as np
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 
+# Ensure eager execution is enabled
+if not tf.executing_eagerly():
+    tf.compat.v1.enable_eager_execution()
+tf.config.run_functions_eagerly(True)
+
 
 def create_cnn_model(input_shape=(28, 28, 1), num_classes=10):
     """

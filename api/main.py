@@ -11,6 +11,12 @@ import time
 import shutil
 from typing import List
 import numpy as np
+import tensorflow as tf
+
+# Ensure eager execution is enabled
+if not tf.executing_eagerly():
+    tf.compat.v1.enable_eager_execution()
+tf.config.run_functions_eagerly(True)
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -264,12 +270,16 @@ async def retrain():
         except Exception as e:
             print(f"Error reloading predictor: {e}")
         
-        # Get final accuracy
-        final_accuracy = history.history['accuracy'][-1]
+        # Get final accuracy safely (handles potential Tensors)
+        try:
+            acc_val = history.history['accuracy'][-1]
+            final_accuracy = float(np.asarray(acc_val).item())
+        except:
+            final_accuracy = 0.0
         
         return {
             "message": "Model retrained successfully",
-            "accuracy": float(final_accuracy),
+            "accuracy": final_accuracy,
             "epochs": len(history.history['accuracy']),
             "training_samples": len(images)
         }
