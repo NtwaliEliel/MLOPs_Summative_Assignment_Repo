@@ -219,6 +219,10 @@ async def retrain():
         # Lazy load predictor to get model
         current_predictor = get_predictor()
         
+        # Convert to numpy arrays for training
+        x_train = np.array(images)
+        y_train = np.array(labels)
+        
         # Load existing model or create new one
         if current_predictor is None or current_predictor.model is None:
             # Import heavy training modules
