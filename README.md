@@ -1,5 +1,7 @@
 # Image MLOps Pipeline - MNIST Classification
 
+## [Video Link](https://youtu.be/auCZ9aLwJ9w)
+
 ## Project Overview
 
 This is a complete end-to-end Machine Learning Operations (MLOps) pipeline for image classification using the MNIST handwritten digit dataset. The project demonstrates data acquisition, preprocessing, model training, evaluation, cloud deployment, API inference, retraining capabilities, monitoring, and load testing.
@@ -169,7 +171,7 @@ Check API health and uptime.
 
 ### Steps
 
-1. **Create a Render account** at [render.com](https://render.com)
+1. **Create a Render account** at [render.com](https://render.com) or a **Railway account** at [railway.com](https://railway.com)
 
 2. **Create a new Web Service**
    - Connect your GitHub repository
@@ -179,7 +181,7 @@ Check API health and uptime.
      - **Start Command**: `cd api && uvicorn main:app --host 0.0.0.0 --port $PORT`
 
 3. **Deploy**
-   - Render will automatically build and deploy
+   - Render or railway will automatically build and deploy
    - Access your API at the provided URL
 
 ### Using Docker
