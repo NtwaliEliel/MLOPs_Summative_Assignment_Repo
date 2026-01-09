@@ -32,4 +32,4 @@ ENV PORT=8000
 
 # Run the application
 # Use the PORT environment variable provided by Railway
-CMD uvicorn main:app --host 0.0.0.0 --port $PORT
+CMD cd /app/api && uvicorn main:app --host 0.0.0.0 --port $PORT
