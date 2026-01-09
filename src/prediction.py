@@ -29,7 +29,7 @@ class ModelPredictor:
         """
         try:
             from tensorflow import keras
-            self.model = keras.models.load_model(self.model_path)
+            self.model = keras.models.load_model(self.model_path, compile=False)
             print(f"Model loaded successfully from {self.model_path}")
         except Exception as e:
             print(f"Error loading model: {e}")

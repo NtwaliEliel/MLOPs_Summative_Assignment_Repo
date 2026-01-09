@@ -211,13 +211,12 @@ def retrain_model(model, new_x_train, new_y_train, epochs=10, batch_size=32, mod
     Returns:
         Training history
     """
-    # Ensure model is compiled
-    if not model.optimizer:
-        model.compile(
-            optimizer='adam',
-            loss='sparse_categorical_crossentropy',
-            metrics=['accuracy']
-        )
+    # Always re-compile to ensure a fresh optimizer instance
+    model.compile(
+        optimizer='adam',
+        loss='sparse_categorical_crossentropy',
+        metrics=['accuracy']
+    )
 
     # Adjust validation split if dataset is very small
     val_split = 0.2 if len(new_x_train) > 5 else 0.0

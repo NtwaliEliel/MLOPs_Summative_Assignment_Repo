@@ -223,21 +223,16 @@ async def retrain():
         x_train = np.array(images)
         y_train = np.array(labels)
         
-        # Load existing model or create new one
-        if current_predictor is None or current_predictor.model is None:
-            # Import heavy training modules
-            from src.model import create_cnn_model, load_model
-            
-            # Try to load from file first
-            try:
-                if os.path.exists(MODEL_PATH):
-                    model = load_model(MODEL_PATH)
-                else:
-                    model = create_cnn_model()
-            except:
+        # Always reload model from disk or create fresh to ensure clean state for training
+        from src.model import create_cnn_model, load_model
+        try:
+            if os.path.exists(MODEL_PATH):
+                model = load_model(MODEL_PATH)
+            else:
                 model = create_cnn_model()
-        else:
-            model = current_predictor.model
+        except Exception as e:
+            print(f"Error loading model for retraining: {e}")
+            model = create_cnn_model()
         
         # Retrain model
         from src.model import retrain_model
