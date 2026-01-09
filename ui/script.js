@@ -1,10 +1,8 @@
-// API base URL - change this to your deployed API URL
-const API_URL = (window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1' ||
-    window.location.hostname === '' ||
-    window.location.protocol === 'file:')
+// API base URL - use current origin for deployed apps, or localhost for local files
+const API_URL = (window.location.origin === 'null' || window.location.protocol === 'file:')
     ? 'http://localhost:8000'
-    : 'https://mnist-mlops-api-production.up.railway.app';
+    : window.location.origin;
+
 
 // Recent predictions storage
 let recentPredictions = [];
