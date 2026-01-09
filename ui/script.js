@@ -1,7 +1,7 @@
-// API base URL - use current origin for deployed apps, or localhost for local files
-const API_URL = (window.location.origin === 'null' || window.location.protocol === 'file:')
+// API base URL
+const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
     ? 'http://localhost:8000'
-    : window.location.origin;
+    : 'https://mnist-mlops-api-production.up.railway.app';
 
 
 // Recent predictions storage
