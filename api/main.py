@@ -4,7 +4,8 @@ FastAPI application for MNIST image classification
 
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 import sys
 import os
 import time
@@ -37,6 +38,7 @@ app.add_middleware(
 # Global variables
 MODEL_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'models', 'cnn_model.h5')
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'train')
+UI_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'ui')
 predictor = None
 start_time = time.time()
 load_error = None
@@ -71,11 +73,18 @@ def get_predictor():
     return predictor
 
 
+# Mount UI static files
+if os.path.exists(UI_DIR):
+    app.mount("/ui", StaticFiles(directory=UI_DIR), name="ui")
+
 @app.get("/")
 async def root():
     """
-    Root endpoint
+    Serve index.html at root
     """
+    index_path = os.path.join(UI_DIR, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
     return {
         "message": "MNIST Image Classification API",
         "version": "1.0.0",

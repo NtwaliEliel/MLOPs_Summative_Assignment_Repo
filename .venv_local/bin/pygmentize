@@ -1,0 +1,7 @@
+#!/Users/elielntwali/Documents/ALU_PROJECTS/Summative-assignment_MLOP_Project/MLOPs_Summative_Assignment_Repo/.venv_local/bin/python3.11
+import sys
+from pygments.cmdline import main
+if __name__ == '__main__':
+    if sys.argv[0].endswith('.exe'):
+        sys.argv[0] = sys.argv[0][:-4]
+    sys.exit(main())

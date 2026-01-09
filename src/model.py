@@ -10,9 +10,13 @@ import numpy as np
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 
 # Ensure eager execution is enabled
-if not tf.executing_eagerly():
-    tf.compat.v1.enable_eager_execution()
-tf.config.run_functions_eagerly(True)
+def _ensure_eager():
+    """Helper to ensure TensorFlow is in eager mode"""
+    if not tf.executing_eagerly():
+        tf.compat.v1.enable_eager_execution()
+    tf.config.run_functions_eagerly(True)
+
+_ensure_eager()
 
 
 def create_cnn_model(input_shape=(28, 28, 1), num_classes=10):
@@ -211,9 +215,9 @@ def retrain_model(model, new_x_train, new_y_train, epochs=10, batch_size=32, mod
     Returns:
         Training history
     """
-    # Always re-compile to ensure a fresh optimizer instance
+    # Use a lower learning rate for stable retraining (finetuning)
     model.compile(
-        optimizer='adam',
+        optimizer=keras.optimizers.Adam(learning_rate=0.0001),
         loss='sparse_categorical_crossentropy',
         metrics=['accuracy']
     )
